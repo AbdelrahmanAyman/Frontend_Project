@@ -1,0 +1,22 @@
+<section class="hero">
+  <div class="hero-copy">
+    @if (authService.currentUser()) {
+      <span class="badge badge-flame">Welcome back, {{ firstName }}</span>
+    }
+
+    <div class="hero-actions">
+      <a routerLink="/menu" class="btn btn-primary">Order Now</a>
+    </div>
+  </div>
+
+  <div class="hero-visual">
+    <div class="oven-glow">
+      <span class="slice">🍕</span>
+    </div>
+  </div>
+</section>
+
+<section class="cta-banner">
+  <h2>Hungry ?</h2>
+  <a routerLink="/menu" class="btn btn-primary">See the menu</a>
+</section>

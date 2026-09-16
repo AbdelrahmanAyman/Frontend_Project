@@ -1,0 +1,14 @@
+:host { display: block; }
+.checkout-page { max-width: 40rem; margin: 0 auto; padding: 3rem 1.5rem 6rem; }
+.checkout-page h1 { font-family: var(--font-display); font-size: 2rem; margin: 0 0 2rem; }
+.checkout-lines { padding: 1.25rem; margin-bottom: 1.5rem; }
+.checkout-line { display: grid; grid-template-columns: 1fr auto auto auto; align-items: center; gap: 1rem; padding: 0.75rem 0; border-bottom: 1px solid var(--border-soft); }
+.line-name { font-weight: 500; }
+.line-size { color: var(--text-muted); font-size: 0.8rem; }
+.line-qty { display: flex; align-items: center; gap: 0.5rem; }
+.qty-btn { width: 1.6rem; height: 1.6rem; border-radius: 999px; border: 1px solid var(--border); background: none; color: var(--text); cursor: pointer; }
+.line-price { color: var(--flame); font-weight: 600; }
+.line-remove { background: none; border: none; color: var(--text-muted); cursor: pointer; }
+.checkout-total { display: flex; justify-content: space-between; padding-top: 1rem; font-weight: 700; font-size: 1.1rem; }
+.checkout-form { padding: 1.5rem; }
+.checkout-form select { background: var(--surface-raised); border: 1px solid var(--border); border-radius: 0.65rem; padding: 0.85rem 1rem; color: var(--text); width: 100%; font-family: var(--font-body); }

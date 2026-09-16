@@ -1,0 +1,52 @@
+<section class="checkout-page">
+  <h1>Your Order</h1>
+
+  @if (cartService.items().length === 0) {
+    <p class="state-message">Your cart is empty. <a routerLink="/menu">Browse the menu</a>.</p>
+  } @else {
+    <div class="checkout-lines card">
+      @for (line of cartService.items(); track line.key) {
+        <div class="checkout-line">
+          <div>
+            <div class="line-name">{{ line.name }}</div>
+            <div class="line-size">
++              {{ line.size }}@if (line.toppings.length) { · {{ line.toppings.join(', ') }} }
++            </div>
+          </div>
+          <div class="line-qty">
+            <button class="qty-btn" (click)="updateQty(line.key, line.qty - 1)">-</button>
+            <span>{{ line.qty }}</span>
+            <button class="qty-btn" (click)="updateQty(line.key, line.qty + 1)">+</button>
+          </div>
+          <div class="line-price">${{ (line.price * line.qty).toFixed(2) }}</div>
+          <button class="line-remove" (click)="removeLine(line.key)">✕</button>
+        </div>
+      }
+      <div class="checkout-total">
+        <span>Total</span>
+        <span>${{ cartService.total().toFixed(2) }}</span>
+      </div>
+    </div>
+
+    @if (errorMessage()) {
+      <div class="form-error">{{ errorMessage() }}</div>
+    }
+
+    <div class="checkout-form card">
+      <div class="field">
+        <label for="address">Delivery address</label>
+        <input id="address" type="text" [(ngModel)]="address" name="address" placeholder="Your address" />
+      </div>
+      <div class="field">
+        <label for="payment">Payment method</label>
+        <select id="payment" [(ngModel)]="payment" name="payment">
+          <option>Cash on delivery</option>
+          <option>Visa</option>
+        </select>
+      </div>
+      <button class="btn btn-primary btn-block" (click)="placeOrder()" [disabled]="placing()">
+        {{ placing() ? 'Placing order…' : 'Place order' }}
+      </button>
+    </div>
+  }
+</section>

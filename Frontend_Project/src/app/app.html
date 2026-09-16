@@ -1,0 +1,42 @@
+<header class="site-header">
+  <nav class="site-nav">
+    <a routerLink="/" class="brand" (click)="closeMenu()">
+      <span class="brand-dot"></span>Pizzaya<span class="brand-period">.</span>
+    </a>
+
+    <button class="menu-toggle" (click)="toggleMenu()" [attr.aria-expanded]="mobileMenuOpen()" aria-label="Toggle menu">
+      <span></span><span></span><span></span>
+    </button>
+
+    <div class="nav-links" [class.open]="mobileMenuOpen()">
+      <a routerLink="/menu" routerLinkActive="active" (click)="closeMenu()">Menu</a>
+
+      <a routerLink="/checkout" routerLinkActive="active" class="nav-cart" (click)="closeMenu()">
+        Cart
+        @if (cartService.count() > 0) {
+          <span class="cart-badge">{{ cartService.count() }}</span>
+        }
+      </a>
+
+      <a routerLink="/dashboard" routerLinkActive="active" (click)="closeMenu()">Orders</a>
+
+      @if (authService.currentUser()) {
+        @if (authService.getRole() === 'admin') {
+          <a routerLink="/orders/manage" routerLinkActive="active" (click)="closeMenu()">Manage Orders</a>
+        }
+        <a routerLink="/profile" routerLinkActive="active" class="nav-user" (click)="closeMenu()">
+          <img [src]="authService.getPhotoUrl(authService.currentUser()?.photo)" alt="" class="nav-avatar" />
+          <span>{{ authService.currentUser()?.name?.split(' ')[0] }}</span>
+        </a>
+      } @else {
+        <a routerLink="/login" routerLinkActive="active" (click)="closeMenu()"><button type="submit" class="btn btn-neon-green btn-block">Log in</button></a>
+        
+        <a routerLink="/signup" class="btn btn-primary btn-sm" (click)="closeMenu()">Sign up</a>
+      }
+    </div>
+  </nav>
+</header>
+
+<main>
+  <router-outlet></router-outlet>
+</main>

@@ -1,0 +1,91 @@
+<div class="dashboard-page">
+  <h1>Dashboard</h1>
+  <p class="subtitle">Track your orders and review your history</p>
+
+  <div class="state-message" *ngIf="isLoading()">Loading your orders…</div>
+  <div class="state-message error" *ngIf="errorMessage() && !isLoading()">{{ errorMessage() }}</div>
+
+  <ng-container *ngIf="!isLoading() && !errorMessage()">
+    <div class="stats-grid">
+      <div class="stat-card">
+        <div class="stat-emoji"></div>
+        <div class="stat-value">{{ stats().totalOrders }}</div>
+        <div class="stat-label">Total Orders</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-emoji"></div>
+        <div class="stat-value purple">${{ stats().totalSpent }}</div>
+        <div class="stat-label">Total Spent</div>
+      </div>
+
+      <div class="stat-card">
+        <div class="stat-emoji"></div>
+        <div class="stat-value red">{{ stats().activeOrders }}</div>
+        <div class="stat-label">Active Orders</div>
+      </div>
+    </div>
+
+    <div class="tabs">
+      <button class="tab" [class.active]="activeTab() === 'active'" (click)="setTab('active')">
+        Active Orders ({{ activeOrders().length }})
+      </button>
+      <button class="tab" [class.active]="activeTab() === 'history'" (click)="setTab('history')">
+        Order History
+      </button>
+    </div>
+
+    <div class="orders-list" *ngIf="activeTab() === 'active'">
+      <div class="order-card" *ngFor="let order of activeOrders()">
+        <div class="order-top">
+          <div>
+            <div class="order-id-row">
+              <h3>Order #{{ order._id.slice(-6).toUpperCase() }}</h3>
+            </div>
+            <p class="order-date">{{ order.createdAt | date:'medium' }}</p>
+          </div>
+          <div class="order-total">
+            <div class="total-amount">${{ order.total.toFixed(2) }}</div>
+            <div class="eta" *ngIf="order.eta">ETA: {{ order.eta }}</div>
+          </div>
+        </div>
+
+        <div class="order-items">
+          <div class="order-item" *ngFor="let item of order.items">
+            <div class="item-info">
+              <span class="item-emoji">🍕</span>
+              <div>
+                <div class="item-name">{{ item.qty }} × {{ item.name }}</div>
+                <div class="item-size">{{ item.size }}</div>
+              </div>
+            </div>
+            <div class="item-price">${{ item.price.toFixed(2) }}</div>
+          </div>
+        </div>
+
+        <div class="order-footer">
+          <span class="order-meta"><h3>📍 Address</h3> {{ order.address }} · {{ order.payment }}</span>
+          <div class="order-footer-actions">
+          @if (authService.getRole() === 'admin') {
+            <button class="btn btn-deliver btn-sm" (click)="markDelivered(order._id)">Delivered</button>
+          }
+          <button class="btn btn-sauce btn-sm" (click)="cancelOrder(order._id)">Cancel Order</button>
+        </div>
+        </div>
+      </div>
+
+      <p class="state-message" *ngIf="activeOrders().length === 0">No active orders right now.</p>
+    </div>
+
+    <div class="orders-list" *ngIf="activeTab() === 'history'">
+      <div class="order-card compact" *ngFor="let order of orderHistory()">
+        <div>
+          
+          <p class="order-date">{{ order.createdAt | date:'medium' }}</p>
+        </div>
+        <div class="total-amount">${{ order.total.toFixed(2) }}</div>
+      </div>
+
+      <p class="state-message" *ngIf="orderHistory().length === 0">No past orders yet.</p>
+    </div>
+  </ng-container>
+</div>

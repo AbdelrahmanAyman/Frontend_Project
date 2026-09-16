@@ -1,0 +1,232 @@
+<section class="menu-page">
+  <div class="menu-header">
+    <div class="menu-header-text">
+      <h1>Our Menu</h1>
+      <p class="subtitle">{{ filteredItems().length }} pizzas crafted with love</p>
+    </div>
+    @if (authService.getRole() === 'admin') {
+      <button class="btn btn-primary add-item-btn" (click)="openAddForm()">+ Add Item</button>
+    }
+  </div>
+
+  <div class="menu-search">
+    <input
+      type="text"
+      placeholder="Search pizzas, toppings..."
+      [value]="searchTerm()"
+      (input)="onSearchInput($event)"
+    />
+  </div>
+
+  @if (!isLoading() && !errorMessage()) {
+    <div class="category-chips">
+      <button class="chip" [class.active]="activeCategory() === 'all'" (click)="setCategory('all')">All</button>
+      @for (category of categories(); track category) {
+        <button class="chip" [class.active]="activeCategory() === category" (click)="setCategory(category)">
+          {{ category }}
+        </button>
+      }
+    </div>
+  }
+
+  @if (isLoading()) {
+    <p class="state-message">Loading the menu…</p>
+  }
+  @if (errorMessage() && !isLoading()) {
+    <p class="state-message error">{{ errorMessage() }}</p>
+  }
+
+  @if (!isLoading() && !errorMessage()) {
+    <div class="menu-grid">
+      @for (item of filteredItems(); track item._id) {
+        <article
+          class="menu-card card"
+          [class.unavailable]="item.isAvailable === false"
+          (click)="openItem(item)"
+        >
+          <div class="menu-card-image" [style.background-image]="'url(' + menuService.getImageUrl(item.imageUrl) + ')'">
+            @if (item.isAvailable === false) {
+              <span class="badge badge-sauce sold-out">Sold out</span>
+            }
+            @if (authService.getRole() === 'admin') {
+              <div class="admin-card-actions">
+                <button class="icon-btn" (click)="openEditForm(item, $event)">Edit</button>
+                <button class="icon-btn danger" (click)="deleteItem(item, $event)">Delete</button>
+              </div>
+            }
+          </div>
+          <div class="menu-card-body">
+            <div class="menu-card-top">
+              <h3>{{ item.name }}</h3>
+              <span class="price">
+                @if (item.sizes && item.sizes.length > 1) {
+                  From ${{ item.price.toFixed(2) }}
+                } @else {
+                  ${{ item.price.toFixed(2) }}
+                }
+              </span>
+            </div>
+            <p>{{ item.description }}</p>
+          </div>
+        </article>
+      }
+    </div>
+
+    @if (filteredItems().length === 0) {
+      <p class="state-message">No pizzas found — try a different search or category.</p>
+    }
+  }
+</section>
+
+<!-- customer detail / customization modal -->
+@if (selectedItem(); as item) {
+  <div class="modal-overlay" (click)="closeItem()">
+    <div class="modal-card card" (click)="$event.stopPropagation()">
+      <button class="modal-close" (click)="closeItem()" aria-label="Close">✕</button>
+
+      <div class="modal-image" [style.background-image]="'url(' + menuService.getImageUrl(item.imageUrl) + ')'"></div>
+
+      <div class="modal-body">
+        <div class="modal-top">
+          <h2>{{ item.name }}</h2>
+          <span class="price">${{ lineTotal().toFixed(2) }}</span>
+        </div>
+        <span class="badge badge-flame modal-category">{{ item.category }}</span>
+
+        <p class="modal-description">{{ item.description }}</p>
+
+        @if (item.sizes && item.sizes.length > 0) {
+          <div class="option-group">
+            <h3>Size</h3>
+            <div class="option-pills">
+              @for (size of item.sizes; track size.label; let i = $index) {
+                <button
+                  type="button"
+                  class="option-pill"
+                  [class.selected]="selectedSizeIndex() === i"
+                >
+                  {{ size.label }} · ${{ size.price.toFixed(2) }}
+                </button>
+              }
+            </div>
+          </div>
+        } @else if (item.size) {
+          <div class="option-group">
+            <h3>Size</h3>
+            <span class="option-pill selected">{{ item.size }}</span>
+          </div>
+        }
+
+        @if (item.toppings && item.toppings.length > 0) {
+          <div class="option-group">
+            <h3>Extra toppings</h3>
+            <div class="option-pills">
+              @for (topping of item.toppings; track topping.name) {
+                <button
+                  type="button"
+                  class="option-pill"
+                  [class.selected]="selectedToppings().has(topping.name)"
+                >
+                  {{ topping.name }} · +${{ topping.price.toFixed(2) }}
+                </button>
+              }
+            </div>
+          </div>
+        }
+
+        @if (item.ingredients && item.ingredients.length) {
+          <div class="modal-ingredients">
+            <h3>Ingredients</h3>
+            <ul>
+              @for (ingredient of item.ingredients; track ingredient) {
+                <li>{{ ingredient }}</li>
+              }
+            </ul>
+          </div>
+        }
+
+        @if (item.isAvailable === false) {
+          <p class="modal-sold-out">This item is currently sold out.</p>
+        } @else {
+          <div class="qty-row">
+            <span>Quantity</span>
+            <div class="qty-controls">
+              <button type="button" class="qty-btn" (click)="decrementQty()">−</button>
+              <span>{{ quantity() }}</span>
+              <button type="button" class="qty-btn" (click)="incrementQty()">+</button>
+            </div>
+          </div>
+
+          <button class="btn btn-primary btn-block" (click)="addSelectedToCart()">
+            Add to order — ${{ lineTotal().toFixed(2) }}
+          </button>
+        }
+      </div>
+    </div>
+  </div>
+}
+
+<!-- admin add/edit modal -->
+@if (showAdminForm()) {
+  <div class="modal-overlay" (click)="closeAdminForm()">
+    <div class="modal-card card form-card" (click)="$event.stopPropagation()">
+      <button class="modal-close" (click)="closeAdminForm()" aria-label="Close">✕</button>
+
+      <div class="modal-body">
+        <h2>{{ editingId() ? 'Edit Item' : 'Add Item' }}</h2>
+
+        @if (formError()) {
+          <div class="form-error">{{ formError() }}</div>
+        }
+
+        <form (ngSubmit)="submitAdminForm()">
+          <div class="photo-field">
+            <label class="photo-upload square" for="item-photo">
+              @if (imagePreview()) {
+                <img [src]="imagePreview()" alt="" />
+              } @else {
+                <span>Add photo</span>
+              }
+            </label>
+            <input id="item-photo" type="file" accept="image/*" (change)="onFileSelected($event)" hidden />
+          </div>
+
+          <div class="field">
+            <label for="item-name">Name</label>
+            <input id="item-name" type="text" [(ngModel)]="formName" name="name" placeholder="Quattro Formaggi" required />
+          </div>
+
+          <div class="field-row">
+            <div class="field">
+              <label for="item-category">Category</label>
+              <input id="item-category" type="text" [(ngModel)]="formCategory" name="category" placeholder="Classic" required />
+            </div>
+            <div class="field">
+              <label for="item-size">Size</label>
+              <input id="item-size" type="text" [(ngModel)]="formSize" name="size" placeholder="Medium" />
+            </div>
+          </div>
+
+          <div class="field">
+            <label for="item-price">Price ($)</label>
+            <input id="item-price" type="number" step="0.01" min="0" [(ngModel)]="formPrice" name="price" placeholder="18.99" required />
+          </div>
+
+          <div class="field">
+            <label for="item-description">Description</label>
+            <input id="item-description" type="text" [(ngModel)]="formDescription" name="description" placeholder="A short, tasty description" />
+          </div>
+
+          <div class="field">
+            <label for="item-ingredients">Ingredients</label>
+            <input id="item-ingredients" type="text" [(ngModel)]="formIngredients" name="ingredients" placeholder="Mozzarella, basil, tomato sauce" />
+          </div>
+
+          <button type="submit" class="btn btn-primary btn-block" [disabled]="saving()">
+            {{ saving() ? 'Saving…' : (editingId() ? 'Save changes' : 'Add item') }}
+          </button>
+        </form>
+      </div>
+    </div>
+  </div>
+}

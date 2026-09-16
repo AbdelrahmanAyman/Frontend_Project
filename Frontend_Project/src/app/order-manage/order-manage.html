@@ -1,0 +1,64 @@
+<section class="manage-page">
+  <div class="manage-header">
+    <div>
+      <h1>Manage Orders</h1>
+      <p class="subtitle">{{ orders().length }} orders total</p>
+    </div>
+  </div>
+
+  <div class="tabs">
+    <button class="tab" [class.active]="activeTab() === 'active'" (click)="setTab('active')">Active</button>
+    <button class="tab" [class.active]="activeTab() === 'delivered'" (click)="setTab('delivered')">Delivered</button>
+    <button class="tab" [class.active]="activeTab() === 'cancelled'" (click)="setTab('cancelled')">Cancelled</button>
+  </div>
+
+  @if (isLoading()) {
+    <p class="state-message">Loading orders…</p>
+  }
+  @if (errorMessage() && !isLoading()) {
+    <p class="state-message error">{{ errorMessage() }}</p>
+  }
+
+  @if (!isLoading() && !errorMessage()) {
+    @for (group of groupedByCustomer(); track group.customerEmail) {
+      <div class="customer-group">
+        <h2>{{ group.customerName }}</h2>
+        <p class="customer-email">{{ group.customerEmail }}</p>
+
+        <div class="order-list">
+          @for (order of group.orders; track order._id) {
+            <div class="order-row card">
+              <div class="order-row-top">
+                <div>
+                  <h3>#{{ order._id.slice(-6).toUpperCase() }}</h3>
+                  <p class="order-row-meta">{{ order.createdAt | date:'medium' }}</p>
+                  <p class="order-row-summary">{{ orderSummary(order) }}</p>
+                </div>
+                <div class="order-row-right">
+                  <span class="badge" [class.badge-flame]="order.status !== 'cancelled'" [class.badge-sauce]="order.status === 'cancelled'">
+                    {{ formatStatus(order.status) }}
+                  </span>
+                  <span class="order-row-total">${{ order.total.toFixed(2) }}</span>
+                </div>
+              </div>
+
+              @if (order.status !== 'delivered' && order.status !== 'cancelled') {
+                <button
+                  class="btn btn-deliver btn-sm"
+                  (click)="markDelivered(order)"
+                  [disabled]="updatingId() === order._id"
+                >
+                  {{ updatingId() === order._id ? 'Updating…' : 'Mark Delivered' }}
+                </button>
+              }
+            </div>
+          }
+        </div>
+      </div>
+    }
+
+    @if (groupedByCustomer().length === 0) {
+      <p class="state-message">No orders in this category.</p>
+    }
+  }
+</section>
